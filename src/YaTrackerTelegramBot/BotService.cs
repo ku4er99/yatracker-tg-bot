@@ -26,7 +26,8 @@ public sealed class BotService(ITelegramClient telegram, ITrackerClient tracker,
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
             catch (Exception exception)
             {
-                Console.Error.WriteLine($"Ошибка обработки обновления: {exception.GetType().Name}");
+                var status = (exception as HttpRequestException)?.StatusCode;
+                Console.Error.WriteLine($"Ошибка обработки обновления: {exception.GetType().Name}, HTTP {status?.ToString() ?? "—"}");
                 await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
             }
         }
@@ -88,7 +89,8 @@ public sealed class BotService(ITelegramClient telegram, ITrackerClient tracker,
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception exception)
         {
-            Console.Error.WriteLine($"Ошибка получения задач: {exception.GetType().Name}");
+            var status = (exception as HttpRequestException)?.StatusCode;
+            Console.Error.WriteLine($"Ошибка получения задач: {exception.GetType().Name}, HTTP {status?.ToString() ?? "—"}");
             await telegram.SendAsync(chatId,
                 "Не удалось получить задачи из Трекера. Проверьте подключение и настройки, затем попробуйте ещё раз.",
                 MainKeyboard, false, cancellationToken);
