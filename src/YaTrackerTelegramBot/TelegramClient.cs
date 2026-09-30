@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -19,6 +20,9 @@ public sealed record TelegramUpdate([property: JsonPropertyName("update_id")] lo
     [property: JsonPropertyName("message")] TelegramMessage? Message,
     [property: JsonPropertyName("callback_query")] TelegramCallback? CallbackQuery);
 
+public sealed class TelegramApiException(string method, HttpStatusCode statusCode, string? description)
+    : Exception($"Telegram {method}: HTTP {(int)statusCode}, {description?[..Math.Min(description.Length, 160)] ?? "без описания"}");
+
 public interface ITelegramClient
 {
     Task<IReadOnlyList<TelegramUpdate>> GetUpdatesAsync(long offset, CancellationToken cancellationToken);
@@ -30,7 +34,10 @@ public interface ITelegramClient
 public sealed class TelegramClient(HttpClient http, string token) : ITelegramClient
 {
     private readonly string _baseUrl = $"https://api.telegram.org/bot{token}/";
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
 
     public async Task<IReadOnlyList<TelegramUpdate>> GetUpdatesAsync(long offset, CancellationToken cancellationToken)
     {
@@ -66,7 +73,8 @@ public sealed class TelegramClient(HttpClient http, string token) : ITelegramCli
         if (ignoreNotModified && response.StatusCode == System.Net.HttpStatusCode.BadRequest &&
             envelope?.Description?.Contains("message is not modified", StringComparison.OrdinalIgnoreCase) == true)
             return default;
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+            throw new TelegramApiException(method, response.StatusCode, envelope?.Description);
         if (envelope?.Ok != true) throw new InvalidOperationException("Telegram API отклонил запрос.");
         return envelope.Result;
     }

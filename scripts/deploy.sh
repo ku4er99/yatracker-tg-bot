@@ -9,8 +9,6 @@ for name in SSH_HOST SSH_USER SSH_PASSWORD TELEGRAM_BOT_TOKEN TRACKER_OAUTH_TOKE
   fi
 done
 
-python3 scripts/smoke.py
-
 sudo apt-get update -qq
 sudo apt-get install -y -qq sshpass >/dev/null
 
@@ -22,7 +20,10 @@ ssh-keygen -lf "$workdir/known_hosts" | grep -Fq 'SHA256:/JSgUuv8GdiYLSI+IQgn2dj
   exit 1
 }
 
-git archive --format=tar HEAD | gzip > "$workdir/release.tar.gz"
+echo 'Building the Docker image on the GitHub runner...'
+docker build --tag yatracker-tg-bot:latest .
+docker save yatracker-tg-bot:latest | gzip -1 > "$workdir/image.tar.gz"
+git archive --format=tar HEAD | gzip -1 > "$workdir/release.tar.gz"
 python3 - "$workdir/bot.env" <<'PY'
 import os
 import pathlib
@@ -39,9 +40,13 @@ path.chmod(0o600)
 PY
 
 export SSHPASS="$SSH_PASSWORD"
-ssh_opts=(-o "UserKnownHostsFile=$workdir/known_hosts" -o StrictHostKeyChecking=yes)
+ssh_opts=(-o "UserKnownHostsFile=$workdir/known_hosts" -o StrictHostKeyChecking=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=3)
 destination="${SSH_USER}@${SSH_HOST}"
+echo 'Copying the release and image to the server...'
 sshpass -e ssh "${ssh_opts[@]}" "$destination" 'mkdir -p "$HOME/telegram-bot" && chmod 700 "$HOME/telegram-bot"'
-sshpass -e scp "${ssh_opts[@]}" "$workdir/release.tar.gz" "$workdir/bot.env" "$destination:~/telegram-bot/"
+sshpass -e scp "${ssh_opts[@]}" "$workdir/release.tar.gz" "$workdir/image.tar.gz" "$workdir/bot.env" "$destination:~/telegram-bot/"
+echo 'Loading the image and restarting the bot...'
 sshpass -e ssh "${ssh_opts[@]}" "$destination" \
-  'set -eu; cd "$HOME/telegram-bot"; tar -xzf release.tar.gz; rm release.tar.gz; mv bot.env .env; chmod 600 .env; docker compose up -d --build --remove-orphans; sleep 8; docker compose ps; docker compose logs --tail=30 bot; test "$(docker compose ps --status running --services)" = bot'
+  'set -eu; cd "$HOME/telegram-bot"; docker load -i image.tar.gz; rm image.tar.gz; tar -xzf release.tar.gz; rm release.tar.gz; mv bot.env .env; chmod 600 .env; docker compose up -d --no-build --force-recreate --remove-orphans; sleep 8; docker compose ps; docker compose logs --tail=30 bot; test "$(docker compose ps --status running --services)" = bot'
+echo 'Checking Telegram and Tracker connectivity...'
+python3 scripts/smoke.py

@@ -48,7 +48,7 @@ docker compose logs -f bot
 
 ## CI/CD
 
-Есть две ветки: `development` и `main`. PR в любую из них запускает `dotnet restore`, `build`, `test`. Push в `main` после успешных проверок проверяет через API токен бота и поиск задач Трекера, упаковывает этот commit, проверяет ED25519-отпечаток учебного сервера, копирует архив и переменные по SSH в `/home/<SSH_USER>/telegram-bot` и выполняет `docker compose up -d --build`. Проверка не выводит токены и задачи в журнал. Для деплоя на сервере у пользователя должны работать Docker и Compose.
+Есть две ветки: `development` и `main`. PR в любую из них запускает `dotnet restore`, `build`, `test`. Push в `main` после успешных проверок собирает Docker-образ на GitHub runner, проверяет ED25519-отпечаток учебного сервера, копирует образ, исходный код и переменные по SSH в `/home/<SSH_USER>/telegram-bot`, загружает образ через `docker load` и запускает `docker compose up -d --no-build`. Затем CI проверяет через API токен бота и поиск задач Трекера. Проверка не выводит токены и задачи в журнал. Для деплоя на сервере у пользователя должны работать Docker и Compose.
 
 В репозитории GitHub откройте **Settings → Secrets and variables → Actions → New repository secret** и добавьте:
 
