@@ -41,8 +41,8 @@ ssh_opts=(-o "UserKnownHostsFile=$workdir/known_hosts" -o StrictHostKeyChecking=
 destination="${SSH_USER}@${SSH_HOST}"
 sshpass -e ssh "${ssh_opts[@]}" "$destination" \
   'cd "$HOME/telegram-bot" && if [ -f compose.yaml ]; then docker compose ps; docker compose logs --tail=30 bot; fi'
-python3 scripts/smoke.py
 sshpass -e ssh "${ssh_opts[@]}" "$destination" 'mkdir -p "$HOME/telegram-bot" && chmod 700 "$HOME/telegram-bot"'
 sshpass -e scp "${ssh_opts[@]}" "$workdir/release.tar.gz" "$workdir/bot.env" "$destination:~/telegram-bot/"
 sshpass -e ssh "${ssh_opts[@]}" "$destination" \
   'set -eu; cd "$HOME/telegram-bot"; tar -xzf release.tar.gz; rm release.tar.gz; mv bot.env .env; chmod 600 .env; docker compose up -d --build --remove-orphans; sleep 8; docker compose ps; docker compose logs --tail=30 bot; test "$(docker compose ps --status running --services)" = bot'
+python3 scripts/smoke.py
