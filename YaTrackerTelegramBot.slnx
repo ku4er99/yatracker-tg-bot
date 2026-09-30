@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/YaTrackerTelegramBot/YaTrackerTelegramBot.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/YaTrackerTelegramBot.Tests/YaTrackerTelegramBot.Tests.csproj" />
+  </Folder>
+</Solution>

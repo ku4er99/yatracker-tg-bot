@@ -1,0 +1,16 @@
+task_key: 20260930-yatracker-telegram-bot
+steps:
+  - analyze assignment and official API documentation
+  - implement Telegram polling and Tracker search
+  - test commands, pagination, errors and access control
+  - package Docker image and Compose service
+  - add PR checks and main deployment workflow
+  - review changes independently and document results
+checks:
+  - dotnet build YaTrackerTelegramBot.slnx -c Release
+  - dotnet test YaTrackerTelegramBot.slnx -c Release
+  - docker build -t yatracker-tg-bot:local .
+risks:
+  - live API integration requires OAuth token and organization ID
+  - live Telegram interaction requires BotFather token
+  - SSH deployment requires current password and Docker permission

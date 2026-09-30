@@ -1,0 +1,10 @@
+{
+  "task_key": "20260930-yatracker-telegram-bot",
+  "scenario": "Show active issues assigned to the OAuth user in Telegram",
+  "sort": "updatedAt descending",
+  "page_size": 10,
+  "required_commands": ["/start", "/tasks"],
+  "access": "one allowed Telegram user in a private chat",
+  "delivery": "PR checks for development and main; deploy on main push",
+  "acceptance": ["friendly error reply", "Docker image", "tests", "README", "report.md"]
+}

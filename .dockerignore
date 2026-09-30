@@ -1,0 +1,10 @@
+.git
+.github
+.env
+**/bin
+**/obj
+tests
+artifacts
+scripts
+report.md
+*.tar.gz
