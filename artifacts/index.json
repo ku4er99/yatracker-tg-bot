@@ -1,0 +1,11 @@
+[
+  {
+    "task_key": "20260930-yatracker-telegram-bot",
+    "source": "AI-005 final project",
+    "title": "Telegram bot for my Yandex Tracker issues",
+    "status": "DOCUMENTED (live integration pending secrets)",
+    "path": "artifacts/20260930-yatracker-telegram-bot",
+    "created": "2026-09-30",
+    "updated": "2026-09-30"
+  }
+]

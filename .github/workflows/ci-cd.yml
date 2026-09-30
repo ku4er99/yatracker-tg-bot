@@ -1,0 +1,43 @@
+name: Build, test and deploy
+
+on:
+  pull_request:
+    branches: [development, main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore YaTrackerTelegramBot.slnx
+      - run: dotnet build YaTrackerTelegramBot.slnx -c Release --no-restore
+      - run: dotnet test YaTrackerTelegramBot.slnx -c Release --no-build
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    concurrency:
+      group: telegram-bot-deploy
+      cancel-in-progress: false
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TRACKER_OAUTH_TOKEN: ${{ secrets.TRACKER_OAUTH_TOKEN }}
+      TRACKER_ORG_ID: ${{ secrets.TRACKER_ORG_ID }}
+      TRACKER_ORG_TYPE: ${{ secrets.TRACKER_ORG_TYPE }}
+      ALLOWED_TELEGRAM_USER_ID: ${{ secrets.ALLOWED_TELEGRAM_USER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy over SSH
+        run: bash scripts/deploy.sh

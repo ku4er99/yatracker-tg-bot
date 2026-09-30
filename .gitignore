@@ -1,0 +1,7 @@
+.env
+*.env.local
+**/bin/
+**/obj/
+TestResults/
+*.user
+release.tar.gz
