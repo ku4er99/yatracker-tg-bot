@@ -34,7 +34,10 @@ public interface ITelegramClient
 public sealed class TelegramClient(HttpClient http, string token) : ITelegramClient
 {
     private readonly string _baseUrl = $"https://api.telegram.org/bot{token}/";
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
 
     public async Task<IReadOnlyList<TelegramUpdate>> GetUpdatesAsync(long offset, CancellationToken cancellationToken)
     {

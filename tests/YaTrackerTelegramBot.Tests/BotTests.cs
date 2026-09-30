@@ -93,6 +93,19 @@ public sealed class BotTests
         await telegram.EditAsync(42, 100, "same page", null, default);
     }
 
+    [Fact]
+    public async Task PlainTelegramMessageOmitsNullParseMode()
+    {
+        var handler = new TelegramSendHandler();
+        using var http = new HttpClient(handler);
+        var telegram = new TelegramClient(http, "test-token");
+        await telegram.SendAsync(42, "Привет", null, false, default);
+        Assert.DoesNotContain("parse_mode", handler.Body);
+        Assert.DoesNotContain("reply_markup", handler.Body);
+        using var payload = JsonDocument.Parse(handler.Body);
+        Assert.Equal("Привет", payload.RootElement.GetProperty("text").GetString());
+    }
+
     private static TelegramUpdate Message(string text, long from = 42) => new(1,
         new TelegramMessage(1, new TelegramChat(from, "private"), new TelegramUser(from), text), null);
 
@@ -161,5 +174,18 @@ public sealed class BotTests
                 Content = new StringContent("{\"ok\":false,\"error_code\":400,\"description\":\"Bad Request: message is not modified\"}",
                     Encoding.UTF8, "application/json")
             });
+    }
+
+    private sealed class TelegramSendHandler : HttpMessageHandler
+    {
+        public string Body { get; private set; } = "";
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Body = await request.Content!.ReadAsStringAsync(cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"ok\":true,\"result\":{}}", Encoding.UTF8, "application/json")
+            };
+        }
     }
 }
