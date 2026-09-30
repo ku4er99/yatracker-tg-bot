@@ -8,4 +8,6 @@
 - `dotnet test YaTrackerTelegramBot.slnx -c Release`: 7 пройдено, 0 ошибок.
 - `docker build -t yatracker-tg-bot:local .`: успешно.
 - `docker run` без конфигурации завершается с понятным сообщением об отсутствующей переменной.
+- PR #1 в `main`: GitHub Actions job `verify` успешно прошёл; `deploy` пропущен до merge.
+- Защита `development` и `main` настроена и проверена через GitHub API: PR и `verify` обязательны, действует для администратора.
 - Живые Telegram/Трекер и SSH-деплой ожидают добавления секретов и создания бота.
