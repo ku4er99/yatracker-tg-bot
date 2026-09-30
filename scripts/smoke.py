@@ -26,6 +26,7 @@ telegram = request_json(
 username = telegram.get("result", {}).get("username", "")
 if not telegram.get("ok") or username.lower() != "yatrackertasksbot":
     raise SystemExit("Telegram getMe: token belongs to a different bot")
+print(f"Telegram getMe: @{username}")
 
 org_type = os.environ["TRACKER_ORG_TYPE"]
 if org_type not in ("cloud", "360"):
@@ -52,4 +53,4 @@ issues = request_json(
 if not isinstance(issues, list):
     raise SystemExit("Tracker search: unexpected response type")
 
-print(f"Telegram getMe: @{username}; Tracker search: OK")
+print("Tracker search: OK")

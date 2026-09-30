@@ -25,6 +25,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     concurrency:
       group: telegram-bot-deploy
       cancel-in-progress: false
