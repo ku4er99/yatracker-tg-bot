@@ -9,8 +9,6 @@ for name in SSH_HOST SSH_USER SSH_PASSWORD TELEGRAM_BOT_TOKEN TRACKER_OAUTH_TOKE
   fi
 done
 
-python3 scripts/smoke.py
-
 sudo apt-get update -qq
 sudo apt-get install -y -qq sshpass >/dev/null
 
@@ -41,6 +39,9 @@ PY
 export SSHPASS="$SSH_PASSWORD"
 ssh_opts=(-o "UserKnownHostsFile=$workdir/known_hosts" -o StrictHostKeyChecking=yes)
 destination="${SSH_USER}@${SSH_HOST}"
+sshpass -e ssh "${ssh_opts[@]}" "$destination" \
+  'cd "$HOME/telegram-bot" && if [ -f compose.yaml ]; then docker compose ps; docker compose logs --tail=30 bot; fi'
+python3 scripts/smoke.py
 sshpass -e ssh "${ssh_opts[@]}" "$destination" 'mkdir -p "$HOME/telegram-bot" && chmod 700 "$HOME/telegram-bot"'
 sshpass -e scp "${ssh_opts[@]}" "$workdir/release.tar.gz" "$workdir/bot.env" "$destination:~/telegram-bot/"
 sshpass -e ssh "${ssh_opts[@]}" "$destination" \
